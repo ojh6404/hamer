@@ -31,7 +31,9 @@ class MANOTransformerDecoderHead(nn.Module):
             token_dim=(npose + 10 + 3) if self.input_is_mean_shape else 1,
             dim=1024,
         )
-        transformer_args = (transformer_args | dict(cfg.MODEL.MANO_HEAD.TRANSFORMER_DECODER))
+        # transformer_args = (transformer_args | dict(cfg.MODEL.MANO_HEAD.TRANSFORMER_DECODER))
+        # for python 3.8
+        transformer_args.update(dict(cfg.MODEL.MANO_HEAD.TRANSFORMER_DECODER))
         self.transformer = TransformerDecoder(
             **transformer_args
         )
