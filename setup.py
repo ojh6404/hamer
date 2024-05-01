@@ -18,7 +18,6 @@ setup(
         'yacs',
         'detectron2 @ git+https://github.com/facebookresearch/detectron2',
         'chumpy @ git+https://github.com/mattloper/chumpy',
-        'mmcv==1.3.9',
         'timm',
         'einops',
         'xtcocotools',
