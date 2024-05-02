@@ -1,6 +1,6 @@
 import os
-if 'PYOPENGL_PLATFORM' not in os.environ:
-    os.environ['PYOPENGL_PLATFORM'] = 'egl'
+# if 'PYOPENGL_PLATFORM' not in os.environ:
+#     os.environ['PYOPENGL_PLATFORM'] = 'egl'
 import torch
 import numpy as np
 import pyrender
@@ -421,3 +421,62 @@ class Renderer:
             if scene.has_node(node):
                 continue
             scene.add_node(node)
+
+class RealtimeRenderer(Renderer):
+    def __init__(self, width, height, cfg: CfgNode, faces: np.array):
+        super().__init__(cfg, faces)
+        self.width = width
+        self.height = height
+        self.renderer = pyrender.OffscreenRenderer(viewport_width=640,
+                                              viewport_height=480,
+                                              point_size=1.0)
+
+    def render_rgba_multiple(
+            self,
+            vertices: List[np.array],
+            cam_t: List[np.array],
+            rot_axis=[1,0,0],
+            rot_angle=0,
+            mesh_base_color=(1.0, 1.0, 0.9),
+            scene_bg_color=(0,0,0),
+            focal_length=None,
+            is_right=None,
+        ):
+
+        # material = pyrender.MetallicRoughnessMaterial(
+        #     metallicFactor=0.0,
+        #     alphaMode='OPAQUE',
+        #     baseColorFactor=(*mesh_base_color, 1.0))
+
+        if is_right is None:
+            is_right = [1 for _ in range(len(vertices))]
+
+        mesh_list = [pyrender.Mesh.from_trimesh(self.vertices_to_trimesh(vvv, ttt.copy(), mesh_base_color, rot_axis, rot_angle, is_right=sss)) for vvv,ttt,sss in zip(vertices, cam_t, is_right)]
+
+        scene = pyrender.Scene(bg_color=[*scene_bg_color, 0.0],
+                               ambient_light=(0.3, 0.3, 0.3))
+        for i,mesh in enumerate(mesh_list):
+            scene.add(mesh, f'mesh_{i}')
+
+        camera_pose = np.eye(4)
+        # camera_pose[:3, 3] = camera_translation
+        camera_center = [self.width / 2., self.height / 2.]
+        focal_length = focal_length if focal_length is not None else self.focal_length
+        camera = pyrender.IntrinsicsCamera(fx=focal_length, fy=focal_length,
+                                           cx=camera_center[0], cy=camera_center[1], zfar=1e12)
+
+        # Create camera node and add it to pyRender scene
+        camera_node = pyrender.Node(camera=camera, matrix=camera_pose)
+        scene.add_node(camera_node)
+        self.add_point_lighting(scene, camera_node)
+        self.add_lighting(scene, camera_node)
+
+        light_nodes = create_raymond_lights()
+        for node in light_nodes:
+            scene.add_node(node)
+
+        color, rend_depth = self.renderer.render(scene, flags=pyrender.RenderFlags.RGBA)
+        color = color.astype(np.float32) / 255.0
+        # renderer.delete()
+
+        return color
