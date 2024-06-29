@@ -10,6 +10,7 @@ setup(
         'numpy',
         'opencv-python',
         'pyrender',
+        'pytorch-lightning',
         'scikit-image>=0.21.0',
         'smplx==0.1.28',
         'yacs',
