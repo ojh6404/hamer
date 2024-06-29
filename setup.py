@@ -13,7 +13,7 @@ setup(
         'scikit-image>=0.21.0',
         'smplx==0.1.28',
         'yacs',
-        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git@a59f05630a8f205756064244bf5beb8661f96180',
+        'detectron2 @ git+https://github.com/facebookresearch/detectron2.git',
         'chumpy @ git+https://github.com/mattloper/chumpy',
         'timm',
         'einops',
